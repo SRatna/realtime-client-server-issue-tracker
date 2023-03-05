@@ -74,7 +74,7 @@ As soon as server receive a story, it pushes it in a queue and as soon as the qu
 
 ## Further improvements
 ### Data persistance
-Use `MongoDB` to save incoming stories. Run a thread that removes the completed story from DB. Also auto populated the story queue with the incomplete stories if exists in the DB during application startup.
+Use [MongoDB](https://www.mongodb.com/) to save incoming stories. Run a thread that removes the completed story from DB. Also auto populate the story queue with the incomplete stories if exists in the DB during application startup.
 
 ### Presentation
 Use [ChartJS](https://www.chartjs.org/) to plot bar charts of generated stories vs completed stories per second. Keep latest 20 of these stats.
