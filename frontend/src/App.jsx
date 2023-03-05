@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 function App() {
   const [noOfStoriesPerSecond, setNoOfStoriesPerSecond] = useState(0);
+  const [noOfStoriesDonePerSecond, setNoOfStoriesDonePerSecond] = useState(0);
+  const [started, setStarted] = useState(false);
 
   const getRandomInt = (min, max) => {
     min = Math.ceil(min);
@@ -10,6 +12,7 @@ function App() {
   }
 
   const generateStories = async () => {
+    console.log('generateStories');
     let i = 0;
     let noOfStories = 0;
 
@@ -35,16 +38,32 @@ function App() {
           'Content-Type': 'application/json'
         },
       })
-      await new Promise(r => setTimeout(r, getRandomInt(20, 80)));
+      await new Promise(r => setTimeout(r, getRandomInt(50, 100)));
     }
   }
 
-  useEffect(() => {
-    // generateStories();
-  }, [])
+  const startJob = () => {
+    setStarted(true);
+    generateStories();
+    const ws = new WebSocket('ws://localhost:3000/ws/status');
+    ws.onopen = () => { console.log('ws opened'); }
+    ws.onmessage = async (evt) => { 
+      const msg = await evt.data.text();
+      setNoOfStoriesDonePerSecond(msg);
+    }
+  }
+  
   return (
-    <div style={{ padding: 16 }}>
-      No of stories produced per second: {noOfStoriesPerSecond}
+    <div>
+      {!started && (<button onClick={startJob} style={{ margin: 16 }}>Start</button>)}
+      {started && (<>
+        <div style={{ padding: 16 }}>
+          No of stories produced per second: {noOfStoriesPerSecond}
+        </div>
+        <div style={{ padding: 16 }}>
+          No of stories done per second: {noOfStoriesDonePerSecond}
+        </div>
+      </>)}
     </div>
   )
 }
