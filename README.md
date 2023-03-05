@@ -36,12 +36,12 @@ type Task struct {
 	estimate int // in ms
 }
 ```
-Then we have `Story` model with id, noOfTasks, completed and tasks as attributes as shown below:
+Then we have `Story` model with id, noOfTasks, completed and array of tasks as attributes as shown below:
 ```go
 type Story struct {
 	id        int
 	noOfTasks int
-  completed bool
+    completed bool
 	tasks     []Task
 }
 ```
