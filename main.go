@@ -93,6 +93,8 @@ func main() {
 		return fiber.ErrUpgradeRequired
 	})
 
+	app.Static("/", "./dist")
+
 	app.Post("api/jobs", func(c *fiber.Ctx) error {
 		story := new(StoryPayload)
 		if err := c.BodyParser(&story); err != nil {
