@@ -33,6 +33,12 @@ type Story struct {
 	noOfTasks int
 	tasks     chan *Task
 }
+type Story struct {
+	id        int
+	noOfTasks int
+	completed bool
+	tasks     []Task
+}
 
 func pushStory(stories chan<- *Story, storyPayload *StoryPayload) {
 	tasks := make(chan *Task, storyPayload.NoOfTasks)

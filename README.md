@@ -41,7 +41,7 @@ Then we have `Story` model with id, noOfTasks, completed and array of tasks as a
 type Story struct {
 	id        int
 	noOfTasks int
-    completed bool
+	completed bool
 	tasks     []Task
 }
 ```
