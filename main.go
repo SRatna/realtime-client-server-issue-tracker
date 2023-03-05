@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -40,17 +43,54 @@ func pushStory(stories chan<- *Story, storyPayload *StoryPayload) {
 	stories <- story
 }
 
+func worker(id int, tasks <-chan *Task) {
+	task := <-tasks
+	time.Sleep(time.Duration(task.estimate) * time.Millisecond)
+}
+
 func main() {
 	app := fiber.New()
 
-	stories := make(chan *Story)
+	noOfStoriesCompleted := 0
+	noOfStoriesCompletedPerSecond := 0
+	ticker := time.NewTicker(time.Second)
+	stories := make(chan *Story, 1000)
+	defer close(stories)
+
+	go func() {
+		for {
+			select {
+			case story := <-stories:
+				go func() {
+					noOfWorkers := story.noOfTasks
+					var wg sync.WaitGroup
+					for i := 0; i < noOfWorkers; i++ {
+						wg.Add(1)
+						i := i
+						go func() {
+							defer wg.Done()
+							worker(i, story.tasks)
+						}()
+					}
+					wg.Wait()
+					noOfStoriesCompleted++
+					noOfStoriesCompletedPerSecond++
+					defer close(story.tasks)
+				}()
+			case <-ticker.C:
+				fmt.Printf("no of stories completed per second %d\n", noOfStoriesCompletedPerSecond)
+				fmt.Printf("no of stories completed %d\n", noOfStoriesCompleted)
+				noOfStoriesCompletedPerSecond = 0
+			}
+		}
+	}()
 
 	app.Post("api/jobs", func(c *fiber.Ctx) error {
 		story := new(StoryPayload)
 		if err := c.BodyParser(&story); err != nil {
 			return err
 		}
-		pushStory(stories, story)
+		go pushStory(stories, story)
 		return nil
 	})
 
