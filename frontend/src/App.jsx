@@ -1,21 +1,7 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 function App() {
-  const payload = {
-    id: 1,
-    noOfTasks: 2,
-    completed: false,
-    tasks: [
-      {
-        id: 1,
-        estimate: 10
-      },
-      {
-        id: 2,
-        estimate: 10
-      }
-    ]
-  };
+  const [noOfStoriesPerSecond, setNoOfStoriesPerSecond] = useState(0);
 
   const getRandomInt = (min, max) => {
     min = Math.ceil(min);
@@ -24,13 +10,21 @@ function App() {
   }
 
   const generateStories = async () => {
-    let i = 0
+    let i = 0;
+    let noOfStories = 0;
+
+    setInterval(() => {
+      setNoOfStoriesPerSecond(noOfStories);
+      noOfStories = 0;
+    }, 1000);
+
     while (true) {
-      i++
-      const noOfTasks = getRandomInt(50, 100);
+      i++;
+      noOfStories++;
+      const noOfTasks = getRandomInt(20, 80);
       const tasks = [];
       for (let j = 0; j < noOfTasks; j++) {
-        const estimate = getRandomInt(1, 50);
+        const estimate = getRandomInt(10, 20);
         tasks.push({ id: j, estimate });
       }
       const story = { id: i, noOfTasks, tasks, completed: false };
@@ -41,7 +35,7 @@ function App() {
           'Content-Type': 'application/json'
         },
       })
-      await new Promise(r => setTimeout(r, getRandomInt(1, 10)));
+      await new Promise(r => setTimeout(r, getRandomInt(20, 80)));
     }
   }
 
@@ -49,8 +43,8 @@ function App() {
     // generateStories();
   }, [])
   return (
-    <div>
-      <button>Start</button>
+    <div style={{ padding: 16 }}>
+      No of stories produced per second: {noOfStoriesPerSecond}
     </div>
   )
 }
