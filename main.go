@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
 )
 
 type TaskPayload struct {
@@ -78,12 +80,18 @@ func main() {
 					defer close(story.tasks)
 				}()
 			case <-ticker.C:
-				fmt.Printf("no of stories completed per second %d\n", noOfStoriesCompletedPerSecond)
 				fmt.Printf("no of stories completed %d\n", noOfStoriesCompleted)
-				noOfStoriesCompletedPerSecond = 0
 			}
 		}
 	}()
+
+	app.Use("/ws", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
 
 	app.Post("api/jobs", func(c *fiber.Ctx) error {
 		story := new(StoryPayload)
@@ -93,6 +101,19 @@ func main() {
 		go pushStory(stories, story)
 		return nil
 	})
+
+	app.Get("/ws/status", websocket.New(func(c *websocket.Conn) {
+		for {
+			status := noOfStoriesCompletedPerSecond
+			noOfStoriesCompletedPerSecond = 0
+			if err := c.WriteMessage(websocket.BinaryMessage, []byte(strconv.Itoa(status))); err != nil {
+				log.Println("write:", err)
+				break
+			}
+			time.Sleep(time.Second)
+		}
+
+	}))
 
 	log.Fatal(app.Listen(":3000"))
 }
